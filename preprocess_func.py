@@ -1,10 +1,11 @@
+import tensorflow as tf
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import os
 
-def preprocess_filtering_data(date,out_name, serieses = [1], data_path='/datasets/kitti/' , dir_path='/NexarStixelnet/' ):
+def preprocess_filtering_data(date,out_name, serieses = [48], data_path='/datasets/kitti/' , dir_path='/NexarStixelnet/' ):
     '''date is a string like this: '2011_09_26'.
     TODO: iterate thru different series
     TODO: implement for different dates
@@ -80,17 +81,20 @@ def preprocess_filtering_data(date,out_name, serieses = [1], data_path='/dataset
 
     X_filt1 = X[y!=46]
     y_filt1 = y[y!=46]
-    X_filt2 = np.concatenate([X_filt1, X[:100]])
-    y_filt2 = np.concatenate([y_filt1, y[:100]])
+    X_filt2 = np.concatenate([X_filt1, X[:200]]) ############### THE FILTERING IS HERE
+    y_filt2 = np.concatenate([y_filt1, y[:200]])
 
     print(X_filt2.shape)
     print(y_filt2.shape)
 
-    np.save(homedir+data_path+'X'+out_name, X_filt2)
-    np.save(homedir+data_path+'y'+out_name, y_filt2)
+    #np.save(homedir+data_path+'X'+out_name, X_filt2)
+    #np.save(homedir+data_path+'y'+out_name, y_filt2)
+
+    dataset = tf.data.Dataset.from_tensor_slices((X_filt2, y_filt2))
     print('saved')
-    return True
+    return dataset
 
 
-#preprocess_filtering_data(date = '2011_09_26', out_name='train02' )
+#ds = preprocess_filtering_data(date = '2011_09_26', out_name='train02' )
 
+#print(ds)
