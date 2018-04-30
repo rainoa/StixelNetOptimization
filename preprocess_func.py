@@ -5,7 +5,17 @@ import matplotlib.image as mpimg
 import numpy as np
 import os
 
-def preprocess_filtering_data(date,out_name, serieses = [48], data_path='/datasets/kitti/' , dir_path='/NexarStixelnet/' ):
+
+def make_generator(images, labels):
+
+  def _generator():
+    for image, label in zip(images, labels):
+      yield (image, label)
+
+  return _generator
+
+
+def preprocess_filtering_data(date,out_name, serieses = [1], data_path='/datasets/kitti/' , dir_path='/NexarStixelnet/' ):
     '''date is a string like this: '2011_09_26'.
     TODO: iterate thru different series
     TODO: implement for different dates
@@ -68,7 +78,7 @@ def preprocess_filtering_data(date,out_name, serieses = [48], data_path='/datase
                 date_labels.append(stx_y_list)
 
     X = np.array(date_stx_list)
-    print(X.shape)
+#    print(X.shape)
 
     _,_,h,w,c = X.shape
     X = X.reshape(-1,h,w,c)
@@ -79,18 +89,40 @@ def preprocess_filtering_data(date,out_name, serieses = [48], data_path='/datase
     y -= 140
     y = np.floor_divide(y,5)
 
+    # with obsticles
     X_filt1 = X[y!=46]
     y_filt1 = y[y!=46]
-    X_filt2 = np.concatenate([X_filt1, X[:200]]) ############### THE FILTERING IS HERE
-    y_filt2 = np.concatenate([y_filt1, y[:200]])
 
-    print(X_filt2.shape)
-    print(y_filt2.shape)
+    # without obstacles
+    X_filt2 = X[y==46]
+    y_filt2 = y[y==46]
+
+    seedNum = 481
+    # seedNum = np.random.randint(1, 1000, size=1)
+    np.random.seed(seed=seedNum)
+    ind = np.random.choice(X_filt2.shape[1], 200)
+
+    X_filt_blnc = np.concatenate([X_filt1, X[ind]]) 
+    y_filt_blnc = np.concatenate([y_filt1, y[ind]])
+
+    print(X_filt_blnc.shape)
+    print(y_filt_blnc.shape)
+
+    #X_filt2 = np.concatenate([X_filt1, X[:200]]) ############### THE FILTERING IS HERE
+    #y_filt2 = np.concatenate([y_filt1, y[:200]])
+
+    #print(X_filt2.shape)
+    #print(y_filt2.shape)
 
     #np.save(homedir+data_path+'X'+out_name, X_filt2)
     #np.save(homedir+data_path+'y'+out_name, y_filt2)
 
-    dataset = tf.data.Dataset.from_tensor_slices((X_filt2, y_filt2))
+    dataset = tf.data.Dataset.from_tensors((X_filt_blnc, y_filt_blnc))
+    #dataset = dataset.batch(28)
+#    dataset = dataset.shuffle(1000).repeat().batch(1)
+
+    #dataset = tf.data.Dataset.from_generator(make_generator(X_filt2, y_filt2),(tf.uint8, tf.uint8)) #),(tf.TensorShape([]),tf.TensorShape([None])))
+
     print('saved')
     return dataset
 
@@ -98,3 +130,4 @@ def preprocess_filtering_data(date,out_name, serieses = [48], data_path='/datase
 #ds = preprocess_filtering_data(date = '2011_09_26', out_name='train02' )
 
 #print(ds)
+
