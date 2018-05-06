@@ -117,14 +117,13 @@ def preprocess_filtering_data(date,out_name, serieses = [1], data_path='/dataset
     #np.save(homedir+data_path+'X'+out_name, X_filt2)
     #np.save(homedir+data_path+'y'+out_name, y_filt2)
 
-    dataset = tf.data.Dataset.from_tensors((X_filt_blnc, y_filt_blnc))
+    ####dataset = tf.data.Dataset.from_tensors((X_filt_blnc, y_filt_blnc))
     #dataset = dataset.batch(28)
 #    dataset = dataset.shuffle(1000).repeat().batch(1)
 
-    #dataset = tf.data.Dataset.from_generator(make_generator(X_filt2, y_filt2),(tf.uint8, tf.uint8)) #),(tf.TensorShape([]),tf.TensorShape([None])))
 
     print('saved')
-    return dataset
+    return X_filt_blnc, y_filt_blnc
 
 
 #ds = preprocess_filtering_data(date = '2011_09_26', out_name='train02' )
