@@ -181,13 +181,13 @@ def np_to_tfrecords(X, Y, file_path_prefix, verbose=True):
 
         
 
-x,y = preprocess_filtering_data(date = '2011_09_26', out_name='train02' )
-print('np array exists')
+#x,y = preprocess_filtering_data(date = '2011_09_26', out_name='train02' )
+#print('np array exists')
 #some manipulations to make tf records func work:
-x=x.reshape(-1)
-x=np.array([x])
-y=np.array([y])
+#x=x.reshape(-1)
+#x=np.array([x])
+#y=np.array([y])
 
-np_to_tfrecords(x, y, './', verbose=True)
-print('tf record exists')
+#np_to_tfrecords(x, y, './', verbose=True)
+#print('tf record exists')
 
