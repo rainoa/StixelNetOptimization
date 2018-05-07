@@ -1,18 +1,10 @@
+
 import tensorflow as tf
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import os
-
-
-def make_generator(images, labels):
-
-  def _generator():
-    for image, label in zip(images, labels):
-      yield (image, label)
-
-  return _generator
 
 
 def preprocess_filtering_data(date,out_name, serieses = [1], data_path='/datasets/kitti/' , dir_path='/NexarStixelnet/' ):
@@ -78,7 +70,6 @@ def preprocess_filtering_data(date,out_name, serieses = [1], data_path='/dataset
                 date_labels.append(stx_y_list)
 
     X = np.array(date_stx_list)
-#    print(X.shape)
 
     _,_,h,w,c = X.shape
     X = X.reshape(-1,h,w,c)
@@ -98,7 +89,7 @@ def preprocess_filtering_data(date,out_name, serieses = [1], data_path='/dataset
     y_filt2 = y[y==46]
 
     seedNum = 481
-    # seedNum = np.random.randint(1, 1000, size=1)
+
     np.random.seed(seed=seedNum)
     ind = np.random.choice(X_filt2.shape[1], 200)
 
@@ -108,25 +99,95 @@ def preprocess_filtering_data(date,out_name, serieses = [1], data_path='/dataset
     print(X_filt_blnc.shape)
     print(y_filt_blnc.shape)
 
-    #X_filt2 = np.concatenate([X_filt1, X[:200]]) ############### THE FILTERING IS HERE
-    #y_filt2 = np.concatenate([y_filt1, y[:200]])
-
-    #print(X_filt2.shape)
-    #print(y_filt2.shape)
-
-    #np.save(homedir+data_path+'X'+out_name, X_filt2)
-    #np.save(homedir+data_path+'y'+out_name, y_filt2)
-
-    ####dataset = tf.data.Dataset.from_tensors((X_filt_blnc, y_filt_blnc))
-    #dataset = dataset.batch(28)
-#    dataset = dataset.shuffle(1000).repeat().batch(1)
-
-
-    print('saved')
     return X_filt_blnc, y_filt_blnc
 
 
-#ds = preprocess_filtering_data(date = '2011_09_26', out_name='train02' )
 
-#print(ds)
+def np_to_tfrecords(X, Y, file_path_prefix, verbose=True):
+    """
+    Converts a Numpy array (or two Numpy arrays) into a tfrecord file.
+    For supervised learning, feed training inputs to X and training labels to Y.
+    For unsupervised learning, only feed training inputs to X, and feed None to Y.
+    The length of the first dimensions of X and Y should be the number of samples.
+    
+    Parameters
+    ----------
+    X : numpy.ndarray of rank 2
+        Numpy array for training inputs. Its dtype should be float32, float64, or int64.
+        If X has a higher rank, it should be rshape before fed to this function.
+    Y : numpy.ndarray of rank 2 or None
+        Numpy array for training labels. Its dtype should be float32, float64, or int64.
+        None if there is no label array.
+    file_path_prefix : str
+        The path and name of the resulting tfrecord file to be generated, without '.tfrecords'
+    verbose : bool
+        If true, progress is reported.
+    
+    Raises
+    ------
+    ValueError
+        If input type is not float (64 or 32) or int.
+    
+    """
+    def _dtype_feature(ndarray):
+        """match appropriate tf.train.Feature class with dtype of ndarray. """
+        assert isinstance(ndarray, np.ndarray)
+        dtype_ = ndarray.dtype
+        if dtype_ == np.float64 or dtype_ == np.float32:
+            return lambda array: tf.train.Feature(float_list=tf.train.FloatList(value=array))
+        elif dtype_ == np.int64:
+            return lambda array: tf.train.Feature(int64_list=tf.train.Int64List(value=array))
+        else:  
+            raise ValueError("The input should be numpy ndarray. \
+                               Instaed got {}".format(ndarray.dtype))
+            
+    assert isinstance(X, np.ndarray)
+    assert len(X.shape) == 2  # If X has a higher rank, 
+                               # it should be rshape before fed to this function.
+    assert isinstance(Y, np.ndarray) or Y is None
+    
+    # load appropriate tf.train.Feature class depending on dtype
+    dtype_feature_x = _dtype_feature(X)
+    if Y is not None:
+        assert X.shape[0] == Y.shape[0]
+        assert len(Y.shape) == 2
+        dtype_feature_y = _dtype_feature(Y)            
+    
+    # Generate tfrecord writer
+    result_tf_file = file_path_prefix + '.tfrecords'
+    writer = tf.python_io.TFRecordWriter(result_tf_file)
+    if verbose:
+        print ("Serializing {:d} examples into {}".format(X.shape[0], result_tf_file))
+        
+    # iterate over each sample,
+    # and serialize it as ProtoBuf.
+    for idx in range(X.shape[0]):
+        x = X[idx]
+        if Y is not None:
+            y = Y[idx]
+        
+        d_feature = {}
+        d_feature['X'] = dtype_feature_x(x)
+        if Y is not None:
+            d_feature['Y'] = dtype_feature_y(y)
+            
+        features = tf.train.Features(feature=d_feature)
+        example = tf.train.Example(features=features)
+        serialized = example.SerializeToString()
+        writer.write(serialized)
+    
+    if verbose:
+        print ("Writing {} done!".format(result_tf_file))
+
+        
+
+x,y = preprocess_filtering_data(date = '2011_09_26', out_name='train02' )
+print('np array exists')
+#some manipulations to make tf records func work:
+x=x.reshape(-1)
+x=np.array([x])
+y=np.array([y])
+
+np_to_tfrecords(x, y, './', verbose=True)
+print('tf record exists')
 
