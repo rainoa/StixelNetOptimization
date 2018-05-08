@@ -53,18 +53,21 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
             
             # train
             for frame in frames_shuff[:int(numFrames*0.7)]:
-                labels_train = save_stixels_return_labels_from_frame(labels_train, date, series, frame, data_path,
+                labels_train_tmp = save_stixels_return_labels_from_frame(date, series, frame, data_path,
                                                                      output_dir = os.path.join(homedir, output_dir, 'train'))
+                labels_train.append(labels_train_tmp)
            
             # val
             for frame in frames_shuff[int(numFrames*0.7):int(numFrames*0.9)]:
-                labels_val = save_stixels_return_labels_from_frame(labels_val, date, series, frame, data_path,
+                labels_val_tmp = save_stixels_return_labels_from_frame(date, series, frame, data_path,
                                                                    output_dir = os.path.join(homedir, output_dir, 'val'))
+                labels_val.append(labels_val_tmp)
             
             # test
             for frame in frames_shuff[int(numFrames*0.9):]:
-                labels_test = save_stixels_return_labels_from_frame(labels_test, date, series, frame, data_path,
+                labels_test_tmp = save_stixels_return_labels_from_frame(date, series, frame, data_path,
                                                                     output_dir = os.path.join(homedir, output_dir, 'test'))
+                labels_test.append(labels_test_tmp)
             
     
     
@@ -90,7 +93,7 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
 
     
     
-def save_stixels_return_labels_from_frame(labels, date, series, frame, data_path, output_dir):
+def save_stixels_return_labels_from_frame(date, series, frame, data_path, output_dir):
            
     stx_w = 24
     stride = 5
@@ -101,7 +104,8 @@ def save_stixels_return_labels_from_frame(labels, date, series, frame, data_path
     rootdir = os.path.join(data_path, date, series, "image_02", 'data')
     
     stx_list = [] #list of np.arrays representing stixels only of this frame 
-
+    labels = []
+    
     impath = os.path.join(rootdir, frame)
     img = mpimg.imread(impath) #img is np.array of the frame
     h, w, c = img.shape
@@ -130,8 +134,8 @@ def save_stixels_return_labels_from_frame(labels, date, series, frame, data_path
         else:
             stx_y = 46 #if no obstical in stixel
             for_use = 0
-        
         labels.append([imName, stx_y, for_use])
+    
     return labels
     
 
