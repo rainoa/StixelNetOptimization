@@ -55,30 +55,36 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
             for frame in frames_shuff[:int(numFrames*0.7)]:
                 labels_train = save_stixels_return_labels_from_frame(labels_train, date, series, frame, data_path,
                                                                      output_dir = os.path.join(homedir, output_dir, 'train'))
-            
-            labels_train_df = pd.DataFrame(labels_train, columns=['Name', 'Label', 'Use_stixel'])
-            labels_train_df = add_no_obstacles_stixels(labels_train_df, percert = 10)          
-            labels_train_df.to_csv(os.path.join(homedir, output_dir, 'train', 'labels_train.csv'), encoding='utf-8', index=False)
-            
-            
+           
             # val
             for frame in frames_shuff[int(numFrames*0.7):int(numFrames*0.9)]:
                 labels_val = save_stixels_return_labels_from_frame(labels_val, date, series, frame, data_path,
                                                                    output_dir = os.path.join(homedir, output_dir, 'val'))
             
-            labels_val_df = pd.DataFrame(labels_val, columns=['Name', 'Label', 'Use_stixel'])
-            labels_val_df = add_no_obstacles_stixels(labels_val_df, percert = 10)
-            labels_val_df.to_csv(os.path.join(homedir, output_dir, 'val', 'labels_val.csv'), encoding='utf-8', index=False)
-            
-            
             # test
             for frame in frames_shuff[int(numFrames*0.9):]:
                 labels_test = save_stixels_return_labels_from_frame(labels_test, date, series, frame, data_path,
                                                                     output_dir = os.path.join(homedir, output_dir, 'test'))
-            labels_test_df = pd.DataFrame(labels_test, columns=['Name', 'Label', 'Use_stixel'])
-            labels_test_df['Use_stixel'] = 1
-            labels_test_df.to_csv(os.path.join(homedir, output_dir, 'test', 'labels_test.csv'), encoding='utf-8', index=False)
-   
+            
+    
+    
+    # change list of list to df and save csv
+    #train
+    labels_train_df = pd.DataFrame(labels_train, columns=['Name', 'Label', 'Use_stixel'])
+    labels_train_df = add_no_obstacles_stixels(labels_train_df, percert = 10)          
+    labels_train_df.to_csv(os.path.join(homedir, output_dir, 'train', 'labels_train.csv'), encoding='utf-8', index=False)
+    
+    #val
+    labels_val_df = pd.DataFrame(labels_val, columns=['Name', 'Label', 'Use_stixel'])
+    labels_val_df = add_no_obstacles_stixels(labels_val_df, percert = 10)
+    labels_val_df.to_csv(os.path.join(homedir, output_dir, 'val', 'labels_val.csv'), encoding='utf-8', index=False)
+    
+    #test
+    labels_test_df = pd.DataFrame(labels_test, columns=['Name', 'Label', 'Use_stixel'])
+    labels_test_df['Use_stixel'] = 1
+    labels_test_df.to_csv(os.path.join(homedir, output_dir, 'test', 'labels_test.csv'), encoding='utf-8', index=False)
+
+    
     return 
       
 
