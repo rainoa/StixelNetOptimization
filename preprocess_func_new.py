@@ -36,6 +36,7 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
         dates = dates[0]      
     
     for date in dates:
+        print(dates)
         serieses = [x[1] for x in os.walk(os.path.join(data_path, date))]
         serieses = serieses[0]                            
         
