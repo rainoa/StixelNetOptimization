@@ -58,7 +58,7 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
             
             labels_train_df = pd.DataFrame(labels_train, columns=['Name', 'Label', 'Use_stixel'])
             labels_train_df = add_no_obstacles_stixels(labels_train_df, percert = 10)          
-            labels_train_df.to_csv(os.path.join(homedir, output_dir, 'labels_train.csv'), encoding='utf-8', index=False)
+            labels_train_df.to_csv(os.path.join(homedir, output_dir, 'train', 'labels_train.csv'), encoding='utf-8', index=False)
             
             
             # val
@@ -68,7 +68,7 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
             
             labels_val_df = pd.DataFrame(labels_val, columns=['Name', 'Label', 'Use_stixel'])
             labels_val_df = add_no_obstacles_stixels(labels_val_df, percert = 10)
-            labels_val_df.to_csv(os.path.join(homedir, output_dir, 'labels_val.csv'), encoding='utf-8', index=False)
+            labels_val_df.to_csv(os.path.join(homedir, output_dir, 'val', 'labels_val.csv'), encoding='utf-8', index=False)
             
             
             # test
@@ -77,7 +77,7 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
                                                                     output_dir = os.path.join(homedir, output_dir, 'test'))
             labels_test_df = pd.DataFrame(labels_test, columns=['Name', 'Label', 'Use_stixel'])
             labels_test_df['Use_stixel'] = 1
-            labels_test_df.to_csv(os.path.join(homedir, output_dir, 'labels_test.csv'), encoding='utf-8', index=False)
+            labels_test_df.to_csv(os.path.join(homedir, output_dir, 'test', 'labels_test.csv'), encoding='utf-8', index=False)
    
     return 
       
