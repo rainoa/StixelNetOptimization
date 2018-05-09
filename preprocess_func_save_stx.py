@@ -33,7 +33,6 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
     if dates is None:
         dates = [x[1] for x in os.walk(data_path)]
         dates = dates[0]      
-    
 
     for date in dates:
         print(date)
@@ -47,30 +46,49 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
             frames = [x[2] for x in os.walk(rootdir)]
             frames = frames[0]
                        
-            frames_shuff = shuffle(frames)
+            frames_shuff = shuffle(frames, random_state=seedNum)
             numFrames = len(frames)
-            
             
             # train
             for frame in frames_shuff[:int(numFrames*0.7)]:
                 labels_train_tmp = save_stixels_return_labels_from_frame(date, series, frame, data_path,
-                                                                     output_dir = os.path.join(homedir, output_dir, 'train'))
-                labels_train.append(labels_train_tmp)
-           
+                                                                         output_dir = os.path.join(homedir, output_dir, 'train'))
+                labels_train += labels_train_tmp
+                            
+            labels_train_df = pd.DataFrame(labels_train, columns=['Name', 'Label', 'Use_stixel'])
+            if not labels_train_df.empty:
+                labels_train_df.to_csv(os.path.join(homedir, output_dir, 'train', 'labels_train_'+series[:-5]+'.csv'), 
+                                       encoding='utf-8', index=False)
+            labels_train = []
+            
+            
             # val
             for frame in frames_shuff[int(numFrames*0.7):int(numFrames*0.9)]:
                 labels_val_tmp = save_stixels_return_labels_from_frame(date, series, frame, data_path,
-                                                                   output_dir = os.path.join(homedir, output_dir, 'val'))
-                labels_val.append(labels_val_tmp)
+                                                                       output_dir = os.path.join(homedir, output_dir, 'val'))
+                labels_val += labels_val_tmp
+            
+            labels_val_df = pd.DataFrame(labels_val, columns=['Name', 'Label', 'Use_stixel'])
+            if not labels_val_df.empty:
+                labels_val_df.to_csv(os.path.join(homedir, output_dir, 'val', 'labels_val_'+series[:-5]+'.csv'), 
+                                     encoding='utf-8', index=False)
+            labels_val = []
+            
             
             # test
             for frame in frames_shuff[int(numFrames*0.9):]:
                 labels_test_tmp = save_stixels_return_labels_from_frame(date, series, frame, data_path,
-                                                                    output_dir = os.path.join(homedir, output_dir, 'test'))
-                labels_test.append(labels_test_tmp)
-            
+                                                                        output_dir = os.path.join(homedir, output_dir, 'test'))
+                labels_test += labels_test_tmp
+   
+            labels_test_df = pd.DataFrame(labels_test, columns=['Name', 'Label', 'Use_stixel'])
+            if not labels_test_df.empty:
+                labels_test_df.to_csv(os.path.join(homedir, output_dir, 'test', 'labels_test_'+series[:-5]+'.csv'), 
+                                      encoding='utf-8', index=False)
+            labels_test = []
     
     
+    '''
     # change list of list to df and save csv
     #train
     labels_train_df = pd.DataFrame(labels_train, columns=['Name', 'Label', 'Use_stixel'])
@@ -86,7 +104,7 @@ def preprocess_data(dates=None, data_path='datasets/kitti/', dir_path='NexarStix
     labels_test_df = pd.DataFrame(labels_test, columns=['Name', 'Label', 'Use_stixel'])
     labels_test_df['Use_stixel'] = 1
     labels_test_df.to_csv(os.path.join(homedir, output_dir, 'test', 'labels_test.csv'), encoding='utf-8', index=False)
-
+    '''
     
     return 
       
@@ -114,29 +132,34 @@ def save_stixels_return_labels_from_frame(date, series, frame, data_path, output
     frame_ground_truth = ground_truth[ground_truth.series_date == date[5:]]
     frame_ground_truth = frame_ground_truth[frame_ground_truth.series_id == int(series[18:21])]
     frame_ground_truth = frame_ground_truth[frame_ground_truth.frame_id == int(frame[:-4])]
-                
-    for stixel in range(num_stixels):
-        
-        i = 12+(stixel*5)
-        s = img[6:,i-12:i+12,:] #that's the stixel, start from 6 because stixel hieght is 370 and not 376
-        imName = series[:-5] + '_frame_' + frame[:-4] +'_stixel_' + str(stixel).zfill(3)
-        # save the stixel image
-        scipy.misc.imsave(os.path.join(output_dir, imName + '.png'), s)
-        
-        # calculate the label value
-        stx_ground_truth = frame_ground_truth[frame_ground_truth.x > i-12]
-        stx_ground_truth = stx_ground_truth[stx_ground_truth.x < i+12]
-        if stx_ground_truth.empty == False:
-            stx_y = int(stx_ground_truth['y'].median()) #calc the label.
-            stx_y -= 140
-            stx_y = np.floor_divide(stx_y,5)
-            for_use = 1
-        else:
-            stx_y = 46 #if no obstical in stixel
-            for_use = 0
-        labels.append([imName, stx_y, for_use])
     
-    return labels
+    
+    if frame_ground_truth.empty:
+        return []
+    
+    else:
+        for stixel in range(num_stixels):
+
+            i = 12+(stixel*5)
+            s = img[6:,i-12:i+12,:] #that's the stixel, start from 6 because stixel hieght is 370 and not 376
+            imName = series[:-5] + '_frame_' + frame[:-4] +'_stixel_' + str(stixel).zfill(3)
+            # save the stixel image
+            scipy.misc.imsave(os.path.join(output_dir, imName + '.png'), s)
+
+            # calculate the label value
+            stx_ground_truth = frame_ground_truth[frame_ground_truth.x > i-12]
+            stx_ground_truth = stx_ground_truth[stx_ground_truth.x < i+12]
+            if stx_ground_truth.empty == False:
+                stx_y = int(stx_ground_truth['y'].median()) #calc the label.
+                stx_y -= 140
+                stx_y = np.floor_divide(stx_y,5)
+                for_use = 1
+            else:
+                stx_y = 46 #if no obstical in stixel
+                for_use = 0
+            labels.append([imName, stx_y, for_use])
+
+        return labels
     
 
     
