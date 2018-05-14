@@ -139,10 +139,24 @@ def save_stixels_return_labels_from_frame(date, series, frame, data_path, output
     
     else:
         for stixel in range(num_stixels):
-
-            i = 12+(stixel*5)
-            s = img[6:,i-12:i+12,:] #that's the stixel, start from 6 because stixel hieght is 370 and not 376
+            
             imName = series[:-5] + '_frame_' + frame[:-4] +'_stixel_' + str(stixel).zfill(3)
+            i = 12+(stixel*5)
+            if img.shape[0] == 370:
+                s = img[:,i-12:i+12,:] #that's the stixel
+                if stixel == 0:
+                    print(imName)
+                    print('img.shape[0]=',img.shape[0])
+                    print('s.shape[0]=',s.shape[0])
+            else:
+                diff_h = img.shape[0]-370
+                s = img[diff_h:,i-12:i+12,:] #that's the stixel
+                if stixel == 0 and img.shape[0]!=375 :
+                    print(imName)
+                    print('img.shape[0]=',img.shape[0])
+                    print('s.shape[0]=',s.shape[0])
+            #s = img[6:,i-12:i+12,:] #that's the stixel, start from 6 because stixel hieght is 370 and not 376
+            
             # save the stixel image
             scipy.misc.imsave(os.path.join(output_dir, imName + '.png'), s)
 
@@ -164,10 +178,10 @@ def save_stixels_return_labels_from_frame(date, series, frame, data_path, output
 
     
     
-def add_no_obstacles_stixels(labels_df, percert = 10):
+def add_no_obstacles_stixels(labels_df, percent = 10):
     num_stx_with_obst = len(labels_df.index[labels_df['Label'] != 46].tolist())    
     no_obst_train_idx = labels_df.index[labels_df['Label'] == 46].tolist()
-    use_idx = random.sample(no_obst_train_idx, int(num_stx_with_obst*percert/100))
+    use_idx = random.sample(no_obst_train_idx, int(num_stx_with_obst*percent/100))
     for idx in use_idx:
         labels_df.at[idx, 'Use_stixel'] = 1
     return labels_df
